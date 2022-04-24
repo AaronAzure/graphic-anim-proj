@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/Users/aaronwee/Desktop/UWA/graphic-anim-proj/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/aaronwee/Desktop/UWA/graphic-anim-proj/CITS3003_Project_Template/lib/angel/include -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk -mmacosx-version-min=10.15 -std=gnu++17 -o CMakeFiles/angel.dir/src/InitShader.cpp.o -c /Users/aaronwee/Desktop/UWA/graphic-anim-proj/CITS3003_Project_Template/lib/angel/src/InitShader.cpp",
+  "file": "/Users/aaronwee/Desktop/UWA/graphic-anim-proj/CITS3003_Project_Template/lib/angel/src/InitShader.cpp"
+}
+]

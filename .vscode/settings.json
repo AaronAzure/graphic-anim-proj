@@ -1,0 +1,5 @@
+{
+    // "cmake.sourceDirectory": "${workspaceFolder}/CITS3003_Project_Template/lib/angel"
+    // "cmake.sourceDirectory": "${workspaceFolder}/CITS3003_Project_Template"
+    "cmake.sourceDirectory": "${workspaceFolder}/CITS3003_Project_Template"
+}
