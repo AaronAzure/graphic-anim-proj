@@ -9,7 +9,7 @@ GCC_OPTIONS = -I lib/angel/include -I lib/lab_pc_specific/assimp/include -I lib/
 	-L lib/lab_pc_specific/assimp -l:libassimp.so.3 \
 	-w -fpermissive -O3 -g \
         -std=c++11 \
-	-D LAB_PC
+	-D LAB_PC -Wno-builtin-macro-redefined
 GL_OPTIONS = -lglut -lGL -lXmu -lX11 -lm -Wl,-rpath,
 
 LIBRARY = -Wl,-rpath,.

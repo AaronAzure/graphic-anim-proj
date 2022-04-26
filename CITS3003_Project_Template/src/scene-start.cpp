@@ -1,4 +1,4 @@
-
+#define GL_SILENCE_DEPRECATION
 #include "Angel.h"
 
 // Open Asset Importer header files (in ../../assimp--3.0.1270/include)
@@ -194,7 +194,7 @@ void zoomOut() {
 static void mouseClickOrScroll(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         if (glutGetModifiers() != GLUT_ACTIVE_SHIFT) activateTool(button);
-        else activateTool(GLUT_LEFT_BUTTON);
+        else activateTool(GLUT_MIDDLE_BUTTON);
     } else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) deactivateTool();
     else if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) { activateTool(button); }
     else if (button == GLUT_MIDDLE_BUTTON && state == GLUT_UP) deactivateTool();
@@ -254,7 +254,7 @@ static void doRotate() {
 }
 
 //------Add an object to the scene--------------------------------------------
-
+int aaron=0;
 static void addObject(int id) {
 
     vec2 currPos = currMouseXYworld(camRotSidewaysDeg);
@@ -281,8 +281,12 @@ static void addObject(int id) {
     sceneObjs[nObjects].angles[2] = 0.0;
 
     sceneObjs[nObjects].meshId = id;
-    sceneObjs[nObjects].texId = rand() % numTextures;
+    if (aaron == 0)
+        sceneObjs[nObjects].texId = 14;
+    else
+        sceneObjs[nObjects].texId = rand() % numTextures;
     sceneObjs[nObjects].texScale = 2.0;
+    aaron++;
 
     toolObj = currObject = nObjects++;
     setToolCallbacks(adjustLocXZ, camRotZ(),
@@ -328,19 +332,22 @@ void init(void) {
     modelViewU = glGetUniformLocation(shaderProgram, "ModelView");
 
     // Objects 0, and 1 are the ground and the first light.
+    //! BACKGROUND
     addObject(0); // Square for the ground
     sceneObjs[0].loc = vec4(0.0, 0.0, 0.0, 1.0);
     sceneObjs[0].scale = 10.0;
     sceneObjs[0].angles[0] = 90.0; // Rotate it.
     sceneObjs[0].texScale = 5.0; // Repeat the texture.
 
+    //! LIGHT SOURCE
     addObject(55); // Sphere for the first light
-    sceneObjs[1].loc = vec4(2.0, 1.0, 1.0, 1.0);
+    sceneObjs[1].loc = vec4(2.0, 0.2, 1.0, 1.0);
     sceneObjs[1].scale = 0.1;
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
 
-    addObject(rand() % numMeshes); // A test mesh
+    // addObject(rand() % numMeshes); // A test mesh
+    addObject(29); // A test mesh
 
     // We need to enable the depth test to discard fragments that
     // are behind previously drawn fragments for the same pixel.
@@ -372,7 +379,10 @@ void drawMesh(SceneObject sceneObj) {
     // Set the model matrix - this should combine translation, rotation and scaling based on what's
     // in the sceneObj structure (see near the top of the program).
 
-    mat4 model = Translate(sceneObj.loc) * Scale(sceneObj.scale);
+    // todo -- TASK B
+    mat4 model = Translate(sceneObj.loc) * Scale(sceneObj.scale) * 
+        RotateX(sceneObj.angles[0]) * RotateY(sceneObj.angles[1]) * RotateZ(sceneObj.angles[2]);
+    // mat4 model = Translate(sceneObj.loc) * Scale(sceneObj.scale);
 
 
     // Set the model-view matrix for the shaders
@@ -404,7 +414,8 @@ void display(void) {
     // Set the view matrix. To start with this just moves the camera
     // backwards.  You'll need to add appropriate rotations.
 
-    view = Translate(0.0, 0.0, -viewDist);
+    // todo -- TASK A
+    view = Translate(0.0, 0.0, -viewDist) * RotateX(camRotUpAndOverDeg) * RotateY(camRotSidewaysDeg);
 
     SceneObject lightObj1 = sceneObjs[1];
     vec4 lightPosition = view * lightObj1.loc;
@@ -468,6 +479,23 @@ static void adjustBlueBrightness(vec2 bl_br) {
     sceneObjs[toolObj].brightness += bl_br[1];
 }
 
+// todo ------------------------------------------------------
+// todo ----------------------- TASK C -----------------------
+
+static void adjustAmbientOrDiffuse(vec2 ad) {
+    sceneObjs[toolObj].ambient += ad[0];
+    sceneObjs[toolObj].diffuse += ad[1];
+}
+
+static void adjustSpecularOrShine(vec2 ss) {
+    sceneObjs[toolObj].specular += ss[0];
+    sceneObjs[toolObj].shine += ss[1];
+}
+
+// todo ----------------------- TASK C -----------------------
+// todo ------------------------------------------------------
+
+
 static void lightMenu(int id) {
     deactivateTool();
     if (id == 70) {
@@ -480,6 +508,26 @@ static void lightMenu(int id) {
                          adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
     } else {
         printf("Error in lightMenu\n");
+        exit(1);
+    }
+}
+
+
+// todo -- TASK J
+static void extraMenu(int id) {
+    deactivateTool();
+    if (id == 90) {
+        // sceneObjs[currObject] = NULL;
+        // currObject = -1;
+    } else if (id == 91) {
+        // if (nObjects < maxObjects)
+        // {
+        //     sceneObjs[++nObjects] = sceneObjs[currObject];
+        //     currObject = nObjects;
+        //     toolObj = currObject;
+        // }
+    } else {
+        printf("Error in extraMenu\n");
         exit(1);
     }
 }
@@ -513,6 +561,11 @@ static void materialMenu(int id) {
         toolObj = currObject;
         setToolCallbacks(adjustRedGreen, mat2(1, 0, 0, 1),
                          adjustBlueBrightness, mat2(1, 0, 0, 1));
+    }
+    else if (id == 20) {
+        toolObj = currObject;
+        setToolCallbacks(adjustAmbientOrDiffuse, mat2(10, 0, 0, 10),
+                     adjustSpecularOrShine, mat2(100, 0, 0, 100));
     }
         // You'll need to fill in the remaining menu items here.
     else {
@@ -551,7 +604,7 @@ static void makeMenu() {
 
     int materialMenuId = glutCreateMenu(materialMenu);
     glutAddMenuEntry("R/G/B/All", 10);
-    glutAddMenuEntry("UNIMPLEMENTED: Ambient/Diffuse/Specular/Shine", 20);
+    glutAddMenuEntry("Ambient/Diffuse/Specular/Shine", 20); 
 
     int texMenuId = createArrayMenu(numTextures, textureMenuEntries, texMenu);
     int groundMenuId = createArrayMenu(numTextures, textureMenuEntries, groundMenu);
@@ -562,6 +615,12 @@ static void makeMenu() {
     glutAddMenuEntry("Move Light 2", 80);
     glutAddMenuEntry("R/G/B/All Light 2", 81);
 
+    int extraMenuId = glutCreateMenu(extraMenu);
+    glutAddMenuEntry("Delete Selected Object", 90);
+    glutAddMenuEntry("Duplicate Selected Object", 91);
+    // glutAddMenuEntry("Move Light 2", 110);
+    // glutAddMenuEntry("R/G/B/All Light 2", 111);
+
     glutCreateMenu(mainmenu);
     glutAddMenuEntry("Rotate/Move Camera", 50);
     glutAddSubMenu("Add object", objectId);
@@ -571,6 +630,7 @@ static void makeMenu() {
     glutAddSubMenu("Texture", texMenuId);
     glutAddSubMenu("Ground Texture", groundMenuId);
     glutAddSubMenu("Lights", lightMenuId);
+    glutAddSubMenu("Extras", extraMenuId);
     glutAddMenuEntry("EXIT", 99);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -580,6 +640,10 @@ static void makeMenu() {
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
         case 033: {
+            exit(EXIT_SUCCESS);
+            break;
+        }
+        case ' ': {
             exit(EXIT_SUCCESS);
             break;
         }
@@ -636,11 +700,23 @@ void reshape(int width, int height) {
     //         that the same part of the scene is visible across the width of
     //         the window.
 
-    GLfloat nearDist = 0.2;
+    // todo -- TASK D
+    GLfloat nearDist = 0.001;
     projection = Frustum(-nearDist * (float) width / (float) height,
                          nearDist * (float) width / (float) height,
                          -nearDist, nearDist,
                          nearDist, 100.0);
+
+    // todo -- TASK E
+    if (width > height)
+        projection = Frustum(-nearDist * (float) width / (float) height,
+                             nearDist * (float) width / (float) height,
+                             -nearDist, nearDist, nearDist, 100.0);
+    else
+        projection = Frustum(-nearDist, nearDist,
+                             -nearDist * (float) height / (float) width,
+                             nearDist * (float) height / (float) width,
+                             nearDist, 100.0);
 }
 
 //----------------------------------------------------------------------------
@@ -726,3 +802,6 @@ int main(int argc, char *argv[]) {
     glutMainLoop();
     return 0;
 }
+
+
+// cmake --build cmake-build && ./start_scene
