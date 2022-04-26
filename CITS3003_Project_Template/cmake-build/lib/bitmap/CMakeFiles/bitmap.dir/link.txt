@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc libbitmap.a CMakeFiles/bitmap.dir/src/bitmap.c.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib libbitmap.a
