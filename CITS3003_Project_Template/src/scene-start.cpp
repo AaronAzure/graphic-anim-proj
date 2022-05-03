@@ -344,12 +344,12 @@ void init(void) {
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
     
-    //! LIGHT SOURCE
-    addObject(55); // Sphere for the second light
-    sceneObjs[2].loc = vec4(2.0, 0.2, 1.0, 1.0);
-    sceneObjs[2].scale = 0.1;
-    sceneObjs[2].texId = 0; // Plain texture
-    sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
+    // //! LIGHT SOURCE
+    // addObject(55); // Sphere for the second light
+    // sceneObjs[2].loc = vec4(2.0, 0.2, 1.0, 1.0);
+    // sceneObjs[2].scale = 0.1;
+    // sceneObjs[2].texId = 0; // Plain texture
+    // sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
 
     // addObject(rand() % numMeshes); // A test mesh
     addObject(32); // A test mesh
@@ -438,7 +438,10 @@ void display(void) {
 
         vec3 rgb = so.rgb * lightObj1.rgb * so.brightness * lightObj1.brightness * 2.0;
         vec3 brightness = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj1.brightness * 2.0;
-        // vec3 rgb = so.rgb * lightObj1.rgb * lightObj2.rgb * so.brightness * lightObj1.brightness * lightObj2.brightness * 2.0;
+
+        // vec3 rgb2 = so.rgb * so.brightness * lightObj2.brightness * 2.0;
+        // vec3 brightness2 = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj2.brightness * 2.0;
+        
         glUniform3fv(glGetUniformLocation(shaderProgram, "AmbientProduct"), 1, so.ambient * rgb);
         CheckError();
         glUniform3fv(glGetUniformLocation(shaderProgram, "DiffuseProduct"), 1, so.diffuse * rgb);
