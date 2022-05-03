@@ -223,6 +223,7 @@ mat2 camRotZ() {
 
 static void adjustCamrotsideViewdist(vec2 cv) {
     cout << cv << endl;
+    // cout << nObjects << endl;
     camRotSidewaysDeg += cv[0];
     viewDist += cv[1];
 }
@@ -254,7 +255,7 @@ static void doRotate() {
 }
 
 //------Add an object to the scene--------------------------------------------
-int aaron=0;
+
 static void addObject(int id) {
 
     vec2 currPos = currMouseXYworld(camRotSidewaysDeg);
@@ -281,12 +282,8 @@ static void addObject(int id) {
     sceneObjs[nObjects].angles[2] = 0.0;
 
     sceneObjs[nObjects].meshId = id;
-    if (aaron == 0)
-        sceneObjs[nObjects].texId = 14;
-    else
-        sceneObjs[nObjects].texId = rand() % numTextures;
+    sceneObjs[nObjects].texId = rand() % numTextures;
     sceneObjs[nObjects].texScale = 2.0;
-    aaron++;
 
     toolObj = currObject = nObjects++;
     setToolCallbacks(adjustLocXZ, camRotZ(),
@@ -338,6 +335,7 @@ void init(void) {
     sceneObjs[0].scale = 10.0;
     sceneObjs[0].angles[0] = 90.0; // Rotate it.
     sceneObjs[0].texScale = 5.0; // Repeat the texture.
+    sceneObjs[0].texId = 23; //! DELETE
 
     //! LIGHT SOURCE
     addObject(55); // Sphere for the first light
@@ -345,9 +343,17 @@ void init(void) {
     sceneObjs[1].scale = 0.1;
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
+    
+    //! LIGHT SOURCE
+    addObject(55); // Sphere for the second light
+    sceneObjs[2].loc = vec4(2.0, 0.2, 1.0, 1.0);
+    sceneObjs[2].scale = 0.1;
+    sceneObjs[2].texId = 0; // Plain texture
+    sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
 
     // addObject(rand() % numMeshes); // A test mesh
-    addObject(29); // A test mesh
+    addObject(32); // A test mesh
+    sceneObjs[3].texId = 22; //! DELETE
 
     // We need to enable the depth test to discard fragments that
     // are behind previously drawn fragments for the same pixel.
@@ -418,20 +424,26 @@ void display(void) {
     view = Translate(0.0, 0.0, -viewDist) * RotateX(camRotUpAndOverDeg) * RotateY(camRotSidewaysDeg);
 
     SceneObject lightObj1 = sceneObjs[1];
-    vec4 lightPosition = view * lightObj1.loc;
+    vec4 lightPosition1 = view * lightObj1.loc;
+
+    // SceneObject lightObj2 = sceneObjs[2];
+    // vec4 lightPosition2 = view * lightObj2.loc;
 
     glUniform4fv(glGetUniformLocation(shaderProgram, "LightPosition"),
-                 1, lightPosition);
+                 1, lightPosition1);
     CheckError();
 
     for (int i = 0; i < nObjects; i++) {
         SceneObject so = sceneObjs[i];
 
         vec3 rgb = so.rgb * lightObj1.rgb * so.brightness * lightObj1.brightness * 2.0;
+        vec3 brightness = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj1.brightness * 2.0;
+        // vec3 rgb = so.rgb * lightObj1.rgb * lightObj2.rgb * so.brightness * lightObj1.brightness * lightObj2.brightness * 2.0;
         glUniform3fv(glGetUniformLocation(shaderProgram, "AmbientProduct"), 1, so.ambient * rgb);
         CheckError();
         glUniform3fv(glGetUniformLocation(shaderProgram, "DiffuseProduct"), 1, so.diffuse * rgb);
-        glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * rgb);
+        // glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * rgb);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * brightness);
         glUniform1f(glGetUniformLocation(shaderProgram, "Shininess"), so.shine);
         CheckError();
 
@@ -502,35 +514,52 @@ static void lightMenu(int id) {
         toolObj = 1;
         setToolCallbacks(adjustLocXZ, camRotZ(),
                          adjustBrightnessY, mat2(1.0, 0.0, 0.0, 10.0));
-    } else if (id >= 71 && id <= 74) {
+    } else if (id == 71) {
         toolObj = 1;
         setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
                          adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
-    } else {
-        printf("Error in lightMenu\n");
-        exit(1);
+    } else if (id == 80) {
+        toolObj = 2;
+        setToolCallbacks(adjustLocXZ, camRotZ(),
+                         adjustBrightnessY, mat2(1.0, 0.0, 0.0, 10.0));
+    } else if (id == 81) {
+        toolObj = 2;
+        setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
+                         adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
     }
 }
 
 
-// todo -- TASK J
+// todo ------------------------------------------------------
+// todo ----------------------- TASK J -----------------------
+
 static void extraMenu(int id) {
     deactivateTool();
+    // todo -- DELETE OBJ
     if (id == 90) {
-        // sceneObjs[currObject] = NULL;
-        // currObject = -1;
-    } else if (id == 91) {
-        // if (nObjects < maxObjects)
-        // {
-        //     sceneObjs[++nObjects] = sceneObjs[currObject];
-        //     currObject = nObjects;
-        //     toolObj = currObject;
-        // }
+        toolObj = currObject;
+        sceneObjs[toolObj].meshId = 0;
+        nObjects--;
+        currObject = toolObj - 1;
+        toolObj = currObject;
+    } 
+    // todo -- DUPLICATE OBJ
+    else if (id == 91) {
+        if (nObjects < maxObjects)
+        {
+            int cloneObj = toolObj;
+            addObject(1);   // auto toolObj++
+            sceneObjs[toolObj] = sceneObjs[cloneObj];
+        }
     } else {
         printf("Error in extraMenu\n");
         exit(1);
     }
 }
+
+// todo ----------------------- TASK J -----------------------
+// todo ------------------------------------------------------
+
 
 static int createArrayMenu(int size, const char menuEntries[][128], void(*menuFn)(int)) {
     int nSubMenus = (size - 1) / 10 + 1;
@@ -618,8 +647,7 @@ static void makeMenu() {
     int extraMenuId = glutCreateMenu(extraMenu);
     glutAddMenuEntry("Delete Selected Object", 90);
     glutAddMenuEntry("Duplicate Selected Object", 91);
-    // glutAddMenuEntry("Move Light 2", 110);
-    // glutAddMenuEntry("R/G/B/All Light 2", 111);
+    glutAddMenuEntry("Add Spotlight", 92);
 
     glutCreateMenu(mainmenu);
     glutAddMenuEntry("Rotate/Move Camera", 50);
