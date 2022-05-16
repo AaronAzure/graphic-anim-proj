@@ -70,6 +70,8 @@ typedef struct {
     int meshId;
     int texId;
     float texScale;
+    // todo -- TASK J
+    float coneAngle;
 } SceneObject;
 
 const int maxObjects = 1024; // Scenes with more than 1024 objects seem unlikely
@@ -337,23 +339,32 @@ void init(void) {
     sceneObjs[0].texScale = 5.0; // Repeat the texture.
     sceneObjs[0].texId = 23; //! DELETE
 
-    //! LIGHT SOURCE
+    //! LIGHT SOURCE ( point light )
     addObject(55); // Sphere for the first light
     sceneObjs[1].loc = vec4(2.0, 0.2, 1.0, 1.0);
     sceneObjs[1].scale = 0.1;
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
+    sceneObjs[1].brightness = 0.0; // The light's brightness is 5 times this (below).
     
-    // //! LIGHT SOURCE
-    // addObject(55); // Sphere for the second light
-    // sceneObjs[2].loc = vec4(2.0, 0.2, 1.0, 1.0);
-    // sceneObjs[2].scale = 0.1;
-    // sceneObjs[2].texId = 0; // Plain texture
-    // sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
+    //! LIGHT SOURCE ( directional light )
+    addObject(55); // Sphere for the second light
+    sceneObjs[2].loc = vec4(2.0, 0.2, 1.0, 1.0);
+    sceneObjs[2].scale = 0.1;
+    sceneObjs[2].texId = 0; // Plain texture
+    sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
+    sceneObjs[2].brightness = 0.0; // The light's brightness is 5 times this (below).
+    
+    //! LIGHT SOURCE ( spot light )
+    addObject(55); // Sphere for the third light
+    sceneObjs[3].loc = vec4(0.0, 0.0, 0.0, 1.0);
+    sceneObjs[3].scale = 0.1;
+    sceneObjs[3].texId = 0; // Plain texture
+    sceneObjs[3].brightness = 1.0; // The light's brightness is 5 times this (below).
 
     // addObject(rand() % numMeshes); // A test mesh
     addObject(32); // A test mesh
-    sceneObjs[3].texId = 22; //! DELETE
+    sceneObjs[4].texId = 22; //! DELETE
 
     // We need to enable the depth test to discard fragments that
     // are behind previously drawn fragments for the same pixel.
@@ -376,6 +387,7 @@ void drawMesh(SceneObject sceneObj) {
     // specularity and normals.
     glUniform1i(glGetUniformLocation(shaderProgram, "texture"), 0);
 
+    // todo -- TASK B
     // Set the texture scale for the shaders
     glUniform1f(glGetUniformLocation(shaderProgram, "texScale"), sceneObj.texScale);
 
@@ -426,11 +438,24 @@ void display(void) {
     SceneObject lightObj1 = sceneObjs[1];
     vec4 lightPosition1 = view * lightObj1.loc;
 
-    // SceneObject lightObj2 = sceneObjs[2];
-    // vec4 lightPosition2 = view * lightObj2.loc;
-
     glUniform4fv(glGetUniformLocation(shaderProgram, "LightPosition"),
                  1, lightPosition1);
+
+    // todo -- TASK H
+    SceneObject lightObj2 = sceneObjs[2];
+    vec4 lightPosition2 = view * vec4(lightObj2.loc[0], lightObj2.loc[1], lightObj2.loc[2], 0);
+    glUniform4fv(glGetUniformLocation(shaderProgram, "LightPosition2"),
+                 1, lightPosition2);
+
+    // todo -- TASK J
+    SceneObject lightObj3 = sceneObjs[3];
+    vec4 lightPosition3 = view * lightObj3.loc;
+    glUniform4fv(glGetUniformLocation(shaderProgram, "LightPosition3"),
+                 1, lightPosition3);
+    glUniform4fv(glGetUniformLocation(shaderProgram, "ConeDirection"),
+                 1, view * RotateX(lightObj3.angles[0]) * RotateY(lightObj3.angles[1]) * RotateZ(lightObj3.angles[2]) * vec4(0,1,0,0));
+    // glUniform1f(glGetUniformLocation(shaderProgram, "ConeAngle"), cos);
+
     CheckError();
 
     for (int i = 0; i < nObjects; i++) {
@@ -439,15 +464,31 @@ void display(void) {
         vec3 rgb = so.rgb * lightObj1.rgb * so.brightness * lightObj1.brightness * 2.0;
         vec3 brightness = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj1.brightness * 2.0;
 
-        // vec3 rgb2 = so.rgb * so.brightness * lightObj2.brightness * 2.0;
-        // vec3 brightness2 = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj2.brightness * 2.0;
+        // todo -- TASK H
+        vec3 rgb2 = so.rgb * lightObj2.rgb * so.brightness * lightObj2.brightness * 2.0;
+        vec3 brightness2 = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj2.brightness * 2.0;
+
+        // todo -- TASK J
+        vec3 rgb3 = so.rgb * lightObj3.rgb * so.brightness * lightObj3.brightness * 2.0;
+        vec3 brightness3 = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj3.brightness * 2.0;
         
         glUniform3fv(glGetUniformLocation(shaderProgram, "AmbientProduct"), 1, so.ambient * rgb);
-        CheckError();
+        // CheckError();
         glUniform3fv(glGetUniformLocation(shaderProgram, "DiffuseProduct"), 1, so.diffuse * rgb);
         // glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * rgb);
         glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * brightness);
         glUniform1f(glGetUniformLocation(shaderProgram, "Shininess"), so.shine);
+        
+        // todo -- TASK H
+        glUniform3fv(glGetUniformLocation(shaderProgram, "AmbientProduct2"), 1, so.ambient * rgb2);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "DiffuseProduct2"), 1, so.diffuse * rgb2);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct2"), 1, so.specular * brightness2);
+        
+        // todo -- TASK J
+        glUniform3fv(glGetUniformLocation(shaderProgram, "AmbientProduct3"), 1, so.ambient * rgb3);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "DiffuseProduct3"), 1, so.diffuse * rgb3);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct3"), 1, so.specular * brightness3);
+        
         CheckError();
 
         drawMesh(sceneObjs[i]);
@@ -510,6 +551,14 @@ static void adjustSpecularOrShine(vec2 ss) {
 // todo ----------------------- TASK C -----------------------
 // todo ------------------------------------------------------
 
+static void adjustLightAngleYX(vec2 angle_yx) {
+    sceneObjs[currObject].angles[1] += angle_yx[0];
+    sceneObjs[currObject].angles[0] += angle_yx[1];
+}
+static void adjustLightAngleZTexscale(vec2 az_ts) {
+    sceneObjs[currObject].angles[2] += az_ts[0];
+    sceneObjs[currObject].texScale += az_ts[1];
+}
 
 static void lightMenu(int id) {
     deactivateTool();
@@ -526,9 +575,24 @@ static void lightMenu(int id) {
         setToolCallbacks(adjustLocXZ, camRotZ(),
                          adjustBrightnessY, mat2(1.0, 0.0, 0.0, 10.0));
     } else if (id == 81) {
-        toolObj = 2;
+        toolObj = 3;
         setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
                          adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
+    } else if (id == 60) {
+        toolObj = 3;
+        setToolCallbacks(adjustLocXZ, camRotZ(),
+                         adjustBrightnessY, mat2(1.0, 0.0, 0.0, 10.0));
+    } else if (id == 61) {
+        toolObj = 3;
+        setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
+                         adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
+    } else if (id == 62) {
+        toolObj = 3;
+        currObject = toolObj;
+        setToolCallbacks(adjustLightAngleYX, mat2(400, 0, 0, -400),
+                         adjustLightAngleZTexscale, mat2(400, 0, 0, 0));
+        // setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
+        //                  adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
     }
 }
 
@@ -540,19 +604,39 @@ static void extraMenu(int id) {
     deactivateTool();
     // todo -- DELETE OBJ
     if (id == 90) {
-        toolObj = currObject;
-        sceneObjs[toolObj].meshId = 0;
-        nObjects--;
-        currObject = toolObj - 1;
-        toolObj = currObject;
+        // CANNOT DELETE PREMADE LIGHT SOURCES OR GROUND
+        if (currObject > 3)
+        {
+            toolObj = currObject;
+            sceneObjs[toolObj].meshId = 0;
+            nObjects--;
+            currObject = toolObj - 1;
+            toolObj = currObject;
+        }
     } 
     // todo -- DUPLICATE OBJ
     else if (id == 91) {
-        if (nObjects < maxObjects)
+        // CANNOT DUPLICATE PREMADE LIGHT SOURCES
+        // AND CANNOT DUPLICATE IF AT OBJECT LIMIT
+        if (currObject != 1 && currObject != 2 && nObjects < maxObjects)
         {
             int cloneObj = toolObj;
             addObject(1);   // auto toolObj++
             sceneObjs[toolObj] = sceneObjs[cloneObj];
+        }
+    }
+    // todo -- DUPLICATE OBJ
+    else if (id == 92) {
+        // CANNOT DUPLICATE PREMADE LIGHT SOURCES
+        // AND CANNOT DUPLICATE IF AT OBJECT LIMIT
+        if (nObjects < maxObjects)
+        {
+            //! LIGHT SOURCE ( spot light )
+            addObject(55); // Sphere for the spot light
+            sceneObjs[toolObj].loc = vec4(2.0, 0.2, 1.0, 1.0);
+            sceneObjs[toolObj].scale = 0.1;
+            sceneObjs[toolObj].texId = 0; // Plain texture
+            sceneObjs[toolObj].brightness = 0.2; // The light's brightness is 5 times this (below).
         }
     } else {
         printf("Error in extraMenu\n");
@@ -646,11 +730,13 @@ static void makeMenu() {
     glutAddMenuEntry("R/G/B/All Light 1", 71);
     glutAddMenuEntry("Move Light 2", 80);
     glutAddMenuEntry("R/G/B/All Light 2", 81);
+    glutAddMenuEntry("Move Spot Light", 60);
+    glutAddMenuEntry("R/G/B/All Spot Light", 61);
+    glutAddMenuEntry("Rotate Spot Light", 62);
 
     int extraMenuId = glutCreateMenu(extraMenu);
     glutAddMenuEntry("Delete Selected Object", 90);
     glutAddMenuEntry("Duplicate Selected Object", 91);
-    glutAddMenuEntry("Add Spotlight", 92);
 
     glutCreateMenu(mainmenu);
     glutAddMenuEntry("Rotate/Move Camera", 50);

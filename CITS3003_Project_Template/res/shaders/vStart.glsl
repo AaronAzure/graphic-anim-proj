@@ -1,6 +1,6 @@
 attribute vec3 vPosition;
 attribute vec3 vNormal;
-attribute vec2 vTexCoord;   // per vertex
+attribute vec2 vTexCoord;
 
 varying vec2 texCoord;
 // varying vec4 color;
