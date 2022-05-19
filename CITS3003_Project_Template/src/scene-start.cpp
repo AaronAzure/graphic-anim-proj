@@ -225,7 +225,6 @@ mat2 camRotZ() {
 
 static void adjustCamrotsideViewdist(vec2 cv) {
     cout << cv << endl;
-    // cout << nObjects << endl;
     camRotSidewaysDeg += cv[0];
     viewDist += cv[1];
 }
@@ -341,23 +340,26 @@ void init(void) {
 
     //! LIGHT SOURCE ( point light )
     addObject(55); // Sphere for the first light
-    sceneObjs[1].loc = vec4(2.0, 0.2, 1.0, 1.0);
+    sceneObjs[1].loc = vec4(2.0, 1.0, 1.0, 1.0);
     sceneObjs[1].scale = 0.1;
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
-    sceneObjs[1].brightness = 0.0; // The light's brightness is 5 times this (below).
+    // sceneObjs[1].brightness = 0.0; // The light's brightness is 5 times this (below).
     
     //! LIGHT SOURCE ( directional light )
     addObject(55); // Sphere for the second light
-    sceneObjs[2].loc = vec4(2.0, 0.2, 1.0, 1.0);
+    sceneObjs[2].loc = vec4(2.0, 0.5, 1.0, 1.0);
     sceneObjs[2].scale = 0.1;
     sceneObjs[2].texId = 0; // Plain texture
     sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
-    sceneObjs[2].brightness = 0.0; // The light's brightness is 5 times this (below).
+    // sceneObjs[2].brightness = 0.0; // The light's brightness is 5 times this (below).
     
     //! LIGHT SOURCE ( spot light )
     addObject(55); // Sphere for the third light
-    sceneObjs[3].loc = vec4(0.0, 0.0, 0.0, 1.0);
+    sceneObjs[3].loc = vec4(2.0, 0.5, 1.0, 1.0);
+    // sceneObjs[3].loc = vec4(0.0, 0.0, 0.0, 1.0);
+    sceneObjs[3].angles[0] = 180.0;
+    sceneObjs[3].coneAngle = 30.0;
     sceneObjs[3].scale = 0.1;
     sceneObjs[3].texId = 0; // Plain texture
     sceneObjs[3].brightness = 1.0; // The light's brightness is 5 times this (below).
@@ -387,7 +389,6 @@ void drawMesh(SceneObject sceneObj) {
     // specularity and normals.
     glUniform1i(glGetUniformLocation(shaderProgram, "texture"), 0);
 
-    // todo -- TASK B
     // Set the texture scale for the shaders
     glUniform1f(glGetUniformLocation(shaderProgram, "texScale"), sceneObj.texScale);
 
@@ -454,7 +455,7 @@ void display(void) {
                  1, lightPosition3);
     glUniform4fv(glGetUniformLocation(shaderProgram, "ConeDirection"),
                  1, view * RotateX(lightObj3.angles[0]) * RotateY(lightObj3.angles[1]) * RotateZ(lightObj3.angles[2]) * vec4(0,1,0,0));
-    // glUniform1f(glGetUniformLocation(shaderProgram, "ConeAngle"), cos);
+    glUniform1f(glGetUniformLocation(shaderProgram, "ConeAngle"), lightObj3.coneAngle * 3.1415/180.0);
 
     CheckError();
 
@@ -473,7 +474,7 @@ void display(void) {
         vec3 brightness3 = so.brightness * vec3( 1.0 , 1.0 , 1.0 ) * lightObj3.brightness * 2.0;
         
         glUniform3fv(glGetUniformLocation(shaderProgram, "AmbientProduct"), 1, so.ambient * rgb);
-        // CheckError();
+        CheckError();
         glUniform3fv(glGetUniformLocation(shaderProgram, "DiffuseProduct"), 1, so.diffuse * rgb);
         // glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * rgb);
         glUniform3fv(glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * brightness);
@@ -551,14 +552,28 @@ static void adjustSpecularOrShine(vec2 ss) {
 // todo ----------------------- TASK C -----------------------
 // todo ------------------------------------------------------
 
+
+// todo ------------------------------------------------------
+// todo ----------------------- TASK J -----------------------
+
 static void adjustLightAngleYX(vec2 angle_yx) {
-    sceneObjs[currObject].angles[1] += angle_yx[0];
-    sceneObjs[currObject].angles[0] += angle_yx[1];
+    sceneObjs[toolObj].angles[1] += angle_yx[0];
+    sceneObjs[toolObj].angles[0] += angle_yx[1];
 }
-static void adjustLightAngleZTexscale(vec2 az_ts) {
-    sceneObjs[currObject].angles[2] += az_ts[0];
-    sceneObjs[currObject].texScale += az_ts[1];
+
+static void adjustLightAngleZCone(vec2 az_ts) {
+    sceneObjs[toolObj].angles[2] += az_ts[0];
+    sceneObjs[toolObj].coneAngle += az_ts[1];
+
+	if (sceneObjs[toolObj].coneAngle < 0.0) 
+		sceneObjs[toolObj].coneAngle = 0.0;
+	if (sceneObjs[toolObj].coneAngle > 60.0) 
+		sceneObjs[toolObj].coneAngle = 60.0;
+	// cout << sceneObjs[toolObj].coneAngle << endl;
 }
+
+// todo ----------------------- TASK J -----------------------
+// todo ------------------------------------------------------
 
 static void lightMenu(int id) {
     deactivateTool();
@@ -575,7 +590,7 @@ static void lightMenu(int id) {
         setToolCallbacks(adjustLocXZ, camRotZ(),
                          adjustBrightnessY, mat2(1.0, 0.0, 0.0, 10.0));
     } else if (id == 81) {
-        toolObj = 3;
+        toolObj = 2;
         setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
                          adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
     } else if (id == 60) {
@@ -588,12 +603,9 @@ static void lightMenu(int id) {
                          adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
     } else if (id == 62) {
         toolObj = 3;
-        currObject = toolObj;
         setToolCallbacks(adjustLightAngleYX, mat2(400, 0, 0, -400),
-                         adjustLightAngleZTexscale, mat2(400, 0, 0, 0));
-        // setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
-        //                  adjustBlueBrightness, mat2(1.0, 0, 0, 1.0));
-    }
+                         adjustLightAngleZCone, mat2(400, 0, 0, 100));
+	}
 }
 
 
@@ -618,7 +630,7 @@ static void extraMenu(int id) {
     else if (id == 91) {
         // CANNOT DUPLICATE PREMADE LIGHT SOURCES
         // AND CANNOT DUPLICATE IF AT OBJECT LIMIT
-        if (currObject != 1 && currObject != 2 && nObjects < maxObjects)
+        if (currObject > 3 && nObjects < maxObjects)
         {
             int cloneObj = toolObj;
             addObject(1);   // auto toolObj++
@@ -732,7 +744,7 @@ static void makeMenu() {
     glutAddMenuEntry("R/G/B/All Light 2", 81);
     glutAddMenuEntry("Move Spot Light", 60);
     glutAddMenuEntry("R/G/B/All Spot Light", 61);
-    glutAddMenuEntry("Rotate Spot Light", 62);
+    glutAddMenuEntry("Scale/Rotate Spot Light", 62);
 
     int extraMenuId = glutCreateMenu(extraMenu);
     glutAddMenuEntry("Delete Selected Object", 90);

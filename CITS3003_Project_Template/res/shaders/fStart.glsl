@@ -16,8 +16,7 @@ uniform vec4 LightPosition2;
 uniform vec3 AmbientProduct3, DiffuseProduct3, SpecularProduct3;
 uniform vec4 LightPosition3;
 uniform vec4 ConeDirection;
-// uniform float ConeAngle;
-
+uniform float ConeAngle;
 
 varying vec3 Position;
 varying vec3 Normal;
@@ -108,27 +107,31 @@ void main()
     float a = 0.3;
     float b = 0.3;
     float c = 0.3;
-    // color.rgb = globalAmbient + ( (ambient + diffuse + specular) / pow( distFromLight , 2.0) );  // lect 16 , pg 4
-    color.rgb = globalAmbient + ambient + ( (diffuse) / (a + b * distFromLight + c * pow( distFromLight , 2.0)) );  // lect 16 , pg 4
+    color.rgb = globalAmbient;  // lect 16 , pg 4
+    color.rgb += ambient + ( (diffuse) / (a + (b * distFromLight) + (c * pow( distFromLight , 2.0))) );  // lect 16 , pg 4
     color.rgb += ambient2 + diffuse2;  // lect 16 , pg 4
     color.a = 1.0;
 
     // todo -- TASK G ---------------------------------------------------
     // todo -------------------------------------------------------------
     
-    if (theta > 0.5) 
+    // todo -- TASK J
+    if (theta > ConeAngle) 
     {       
-        color.rgb += globalAmbient + ambient3 + ( (diffuse3) / (a + b * distFromLight3 + c * pow( distFromLight3 , 2.0)) );
-        color.a = 1.0;
+        color.rgb += ( (diffuse3) / (a + (b * distFromLight3) + (c * pow( distFromLight3 , 2.0))) );
+        // color.rgb += ambient3 + ( (diffuse3) / (a + (b * distFromLight3) + (c * pow( distFromLight3 , 2.0))) );
     }
-    else  // else, use ambient light so scene isn't completely dark outside the spotlight.
-    {
-        color = vec4(globalAmbient, 1.0);
-    }
+    // else  // else, use ambient light so scene isn't completely dark outside the spotlight.
+    // {
+    //     color = vec4(globalAmbient, 1.0);
+    // }
 
     // todo -- TASK B
-    gl_FragColor = color * texture2D( texture, texCoord * 2.0 * texScale);
-    gl_FragColor += vec4((specular) / ((a + b * distFromLight + c * pow( distFromLight , 2.0)) ), 1.0 );
+    gl_FragColor = color;
+    gl_FragColor += vec4(specular / ((a + b * distFromLight + c * pow( distFromLight , 2.0)) ), 1.0 );
     gl_FragColor += vec4(specular2 , 1.0 );
+	if (theta > ConeAngle) 
+    	gl_FragColor += vec4(specular3 / ((a + b * distFromLight3 + c * pow( distFromLight3 , 2.0)) ), 1.0 );
+    gl_FragColor *= texture2D( texture, texCoord * 2.0 * texScale);
 
 }
