@@ -117,21 +117,16 @@ void main()
     
     // todo -- TASK J
     if (theta > ConeAngle) 
-    {       
-        color.rgb += ( (diffuse3) / (a + (b * distFromLight3) + (c * pow( distFromLight3 , 2.0))) );
-        // color.rgb += ambient3 + ( (diffuse3) / (a + (b * distFromLight3) + (c * pow( distFromLight3 , 2.0))) );
-    }
-    // else  // else, use ambient light so scene isn't completely dark outside the spotlight.
-    // {
-    //     color = vec4(globalAmbient, 1.0);
-    // }
+        color.rgb += ambient3 + ( (diffuse3) / (a + (b * distFromLight3) + (c * pow( distFromLight3 , 2.0))) );
 
     // todo -- TASK B
     gl_FragColor = color;
     gl_FragColor += vec4(specular / ((a + b * distFromLight + c * pow( distFromLight , 2.0)) ), 1.0 );
     gl_FragColor += vec4(specular2 , 1.0 );
+
 	if (theta > ConeAngle) 
     	gl_FragColor += vec4(specular3 / ((a + b * distFromLight3 + c * pow( distFromLight3 , 2.0)) ), 1.0 );
-    gl_FragColor *= texture2D( texture, texCoord * 2.0 * texScale);
+    
+	gl_FragColor *= texture2D( texture, texCoord * 2.0 * texScale);
 
 }

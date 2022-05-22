@@ -336,7 +336,7 @@ void init(void) {
     sceneObjs[0].scale = 10.0;
     sceneObjs[0].angles[0] = 90.0; // Rotate it.
     sceneObjs[0].texScale = 5.0; // Repeat the texture.
-    sceneObjs[0].texId = 23; //! DELETE
+    // sceneObjs[0].texId = 23; //! DELETE
 
     //! LIGHT SOURCE ( point light )
     addObject(55); // Sphere for the first light
@@ -344,7 +344,6 @@ void init(void) {
     sceneObjs[1].scale = 0.1;
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
-    // sceneObjs[1].brightness = 0.0; // The light's brightness is 5 times this (below).
     
     //! LIGHT SOURCE ( directional light )
     addObject(55); // Sphere for the second light
@@ -352,21 +351,19 @@ void init(void) {
     sceneObjs[2].scale = 0.1;
     sceneObjs[2].texId = 0; // Plain texture
     sceneObjs[2].brightness = 0.2; // The light's brightness is 5 times this (below).
-    // sceneObjs[2].brightness = 0.0; // The light's brightness is 5 times this (below).
     
     //! LIGHT SOURCE ( spot light )
     addObject(55); // Sphere for the third light
     sceneObjs[3].loc = vec4(2.0, 0.5, 1.0, 1.0);
-    // sceneObjs[3].loc = vec4(0.0, 0.0, 0.0, 1.0);
     sceneObjs[3].angles[0] = 180.0;
     sceneObjs[3].coneAngle = 30.0;
     sceneObjs[3].scale = 0.1;
     sceneObjs[3].texId = 0; // Plain texture
-    sceneObjs[3].brightness = 1.0; // The light's brightness is 5 times this (below).
+    sceneObjs[3].brightness = 0.2; // The light's brightness is 5 times this (below).
 
-    // addObject(rand() % numMeshes); // A test mesh
-    addObject(32); // A test mesh
-    sceneObjs[4].texId = 22; //! DELETE
+    addObject(rand() % numMeshes); // A test mesh
+    // addObject(32); // A test mesh
+    // sceneObjs[4].texId = 22; //! DELETE
 
     // We need to enable the depth test to discard fragments that
     // are behind previously drawn fragments for the same pixel.
@@ -636,20 +633,6 @@ static void extraMenu(int id) {
             addObject(1);   // auto toolObj++
             sceneObjs[toolObj] = sceneObjs[cloneObj];
         }
-    }
-    // todo -- DUPLICATE OBJ
-    else if (id == 92) {
-        // CANNOT DUPLICATE PREMADE LIGHT SOURCES
-        // AND CANNOT DUPLICATE IF AT OBJECT LIMIT
-        if (nObjects < maxObjects)
-        {
-            //! LIGHT SOURCE ( spot light )
-            addObject(55); // Sphere for the spot light
-            sceneObjs[toolObj].loc = vec4(2.0, 0.2, 1.0, 1.0);
-            sceneObjs[toolObj].scale = 0.1;
-            sceneObjs[toolObj].texId = 0; // Plain texture
-            sceneObjs[toolObj].brightness = 0.2; // The light's brightness is 5 times this (below).
-        }
     } else {
         printf("Error in extraMenu\n");
         exit(1);
@@ -695,7 +678,6 @@ static void materialMenu(int id) {
         setToolCallbacks(adjustAmbientOrDiffuse, mat2(10, 0, 0, 10),
                      adjustSpecularOrShine, mat2(100, 0, 0, 100));
     }
-        // You'll need to fill in the remaining menu items here.
     else {
         printf("Error in materialMenu\n");
     }
